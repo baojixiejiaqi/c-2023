@@ -1,0 +1,30 @@
+//输入两个字符串，从第一字符串中删除第二个字符串中所有的字符。例如，输入”They are students.”和”aeiou”，则删除之后的第一个字符串变成”Thy r stdnts.”
+#pragma once
+#pragma warning(disable : 4996)
+#include <stdio.h>
+#include<string.h>
+int Isexit(char* str2, char ch)
+{
+    for (int i = 0; i < strlen(str2); i++)
+    {
+        if (ch == str2[i])//如果相等就不输出
+        {
+            return 1;
+        }
+    }
+    return 0;//循环结束把整体输出
+}
+int main() {
+    char str1[100] = { 0 };
+    char str2[100] = { 0 };
+    gets(str1);//因为这次字符串有空格，所以只能gets输入
+    gets(str2);
+    for (int i = 0; i < strlen(str1); i++)
+    {
+        if ((Isexit(str2, str1[i])) == 0)//如果不想等就输出，变相意思是如果你的子串和你的主串重复了，那就这个不输出，跳过下一个
+        {
+            printf("%c", str1[i]);
+        }
+    }
+    return 0;
+}
