@@ -1,0 +1,35 @@
+#pragma once
+#pragma warning(disable : 4996)
+#include<stdio.h>
+int main()
+{
+	int f1 = 0;
+	int f2 = 1;
+	int f3 = 1;
+	int n = 0;
+	scanf("%d", &n);
+	while(1)
+	{
+		if (n == f2)//如果数字是属于数列的，那么就返回0
+		{
+			printf("0");
+			break;
+		}
+		else if (n < f2)
+		{
+			if (abs(n - f1) > abs(f2 - n))//如果这个数字在数列两个数字之间，那么就找最近距离
+			{
+				printf("%d", abs(f2 - n));
+			}
+			else
+			{
+				printf("%d", abs(f1 - n));
+			}
+			break;
+		}
+		f1 = f2;
+		f2 = f3;
+		f3 = f1 + f2;
+	}
+	return 0;
+}
