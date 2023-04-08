@@ -1,0 +1,41 @@
+//请实现一个函数，将一个字符串中的每个空格替换成“%20”。例如，当字符串为We Are Happy.则经过替换之后的字符串为We%20Are%20Happy。
+#pragma once
+#pragma warning(disable : 4996)
+#include<stdio.h>
+void replaceSpace(char* str, int length)
+{
+	char* cur = str;
+	int count_space = 0;
+	while (*cur)
+	{
+		if (*cur == ' ')
+		{
+			count_space++;
+		}
+			cur++;
+	}
+	char* end1 = str + length; //字符串正常末尾位置
+	char* end2 = str + length + 2 * count_space;//空格要替换成%20，多两个位置，所以一个空格就要后移两个
+	while (end1 != end2)//如果两个位置没有重合就一直继续
+	{
+		if (*end1 != ' ')//不等于空格就两个都往前挪
+		{
+			*end2-- = *end1--;
+		}
+		else//%20从后向前赋值，然后赋值完再让end1往前动一位即可
+		{
+			*end2-- = '0';
+			*end2-- = '2';
+			*end2-- = '%';
+			end1--;
+		}
+	}
+}
+int main()
+{
+	char arr[40] = "we are happy";
+	int len = strlen(arr);
+	replaceSpace(arr,len);
+	printf("%s\n", arr);
+	return 0;
+}
