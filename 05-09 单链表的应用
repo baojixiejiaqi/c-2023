@@ -1,0 +1,365 @@
+#pragma once 
+#include<stdio.h>
+#include<assert.h>
+#include<stdlib.h>
+#pragma warning(disable : 4996)
+
+typedef int SLTDataType;//定义int 类型为SLTDataType
+
+typedef struct SListNode  //Node 节点  定义结构体类型的 Slist节点
+{
+	SLTDataType data;  //数据
+	struct SListNode* next; //指针指向下一块地址
+}SLTNode;
+
+SLTNode* BuySLTNode(SLTDataType x);  //创建单链表的一个结点
+
+SLTNode* CreateSList(int n); //创建整个单链表
+
+void SLTPrint(SLTNode* head);//打印单链表
+
+void SLTPushBack(SLTNode** head, SLTDataType x);//单链表的尾插
+
+void SLTDeleteTail(SLTNode** head);//单链表的尾删
+
+void SLTPushHead(SLTNode ** head, SLTDataType x);//单链表的头插
+
+void SLTDeleteHead(SLTNode** head);//单链表的头删
+
+SLTNode* SLTFind(SLTNode* head, SLTDataType x);//查找数字
+
+void SLTInsertAfter(SLTNode* pos, SLTDataType x);//单链表在pos位置后插入
+
+void SLTInsert(SLTNode** head, SLTNode* pos, SLTDataType x);//单链表在pos位置插入
+
+void SLTEraseAfter(SLTNode* pos);//单链表在pos位置后删除
+
+void SLTErase(SLTNode** pphead, SLTNode* pos);//单链表删除pos位置
+
+void SLTDestory(SLTNode** pphead);//销毁单链表
+
+#include "SList.h"
+
+SLTNode* BuySLTNode(SLTDataType x)//创建单链表的一个结点
+{
+	SLTNode* newnode = (SLTNode*)malloc(sizeof(SLTNode));//开普空间
+	if (newnode == NULL)
+	{
+		perror("malloc fail");
+		exit(-1);
+	}
+	newnode->data = x; //将值赋予进去
+	newnode->next = NULL;//将后面空间置为空
+	return newnode;
+}
+
+SLTNode * CreateSList(int  n) //创建整个单链表
+{
+	SLTNode* head = NULL, *tail = NULL;//头结点和尾节点都为空
+	int x = 0;//定义输入的值
+	for (int i = 0; i < n; i++)
+	{
+		scanf("%d", &x);
+		SLTNode* newnode = BuySLTNode(x); // 将值赋予进去
+		if (head == NULL)//如果为空
+		{
+			head = tail = newnode;//开始将三个节点都为第一个
+		}
+		else
+		{
+			tail->next = newnode;
+			//让当前节点的struct SListNode* next 存储下一个节点的地址
+			tail = newnode;//将后面新的节点赋予尾节点
+		}
+	}
+	tail->next = NULL;//循环完让 单链表的最后一个节点的next 置为空
+	return head;
+}
+
+void SLTPrint(SLTNode * head)//打印单链表
+{
+	SLTNode* cur = head;//不能轻易改变头地址，所以创建一个临时变量
+	while (cur != NULL)
+	{
+		printf("[%d|%p]->", cur->data, cur->next);//打印数据和地址
+		cur = cur->next;//下一个节点
+	}
+	printf("NULL\n"); //将最后一个节点的空 打印出来
+}
+
+void SLTPushBack(SLTNode** head, SLTDataType x)//单链表的尾插
+{
+	SLTNode* newnode = BuySLTNode(x);//创建新的节点
+	if (*head == NULL) //如果为空链表 就让头节点等于新的节点
+	{
+		*head = newnode;
+	}
+	else //另一种情况
+	{
+		SLTNode* tail = *head;//开始找尾
+		while (tail->next) //tail目前不为空
+		{
+			tail = tail->next;//就继续往下走
+		}
+		tail->next = newnode;//找到空，将最后一个节点的地址指向新节点
+	}
+}
+
+void SLTDeleteTail(SLTNode** head)//单链表的尾删
+{
+	assert(*head);//head 一级指针不能为空
+
+	if ((*head)->next == NULL) //链表的下一级存放地址为空
+	{
+		free(*head); //就释放
+		*head = NULL;
+	}
+	else //不为空
+	{
+		SLTNode* tail = *head; //创建临时变量 
+		while (tail->next->next) //节点的下下一个节点不为空
+		{
+			tail = tail->next;//就往下一个节点走
+		}
+		free(tail->next);//为空 就释放本节点的下一个节点
+		tail->next = NULL;//置空
+	}
+}
+
+void SLTPushHead(SLTNode** head, SLTDataType x)//单链表的头插
+{
+	SLTNode* newnode = BuySLTNode(x);//创建新的一个节点
+	newnode->next = *head;//将原来第一个节点地址赋予新的节点的地址
+	*head = newnode;//将新的地址放第一个
+}
+
+void SLTDeleteHead(SLTNode** head)//单链表的头删
+{
+	assert(*head);//断言
+	SLTNode* next = (*head)->next;//第一个节点的地址指向第二个节点
+	free(*head);
+	*head = next;//头结点赋予第二个节点
+}
+
+SLTNode * SLTFind(SLTNode* head, SLTDataType x)//单链表的查找数字
+{
+	SLTNode* cur = head;//创建临时变量
+	while (cur)//cur不能为空，为空表示到最后也没找到，turn NULL
+	{
+		if (cur->data == x)//如果相等 就放回
+		{
+			return cur;
+		}
+		cur = cur->next;
+	}
+	return NULL;
+}
+
+void SLTInsertAfter(SLTNode* pos, SLTDataType x)//单链表在pos位置后插入
+{
+	assert(pos);
+	SLTNode* newnode = BuySLTNode(x);  //创建新的节点
+	newnode->next = pos->next;//将pos的地址存到newnode的next中
+	pos->next = newnode;//将pos后面的那个节点变为新的那个节点
+}
+
+void SLTInsert(SLTNode** head, SLTNode* pos, SLTDataType x)//单链表在pos位置插入
+{
+	assert(pos);
+
+	if (*head == pos) //如果头节点等于pos位置 就在头前面插入一个
+	{
+		SLTPushHead(head, x);
+	}
+	else//否则
+	{
+		SLTNode* tmp = *head;//创建临时变量
+		while (tmp->next != pos) //不相等就往下一个走
+		{
+			tmp = tmp->next;
+		}
+		SLTNode* newnode = BuySLTNode(x);//在pos位置之前的一个到了就创建新的一个节点
+		tmp->next = newnode;//将新的节点的地址赋予newnode的位置
+		newnode->next = pos;//pos的地址放到newnode的next
+	}
+}
+
+void SLTEraseAfter(SLTNode* pos)//删除pos后位置的节点
+{
+	assert(pos);
+
+	if (pos->next == NULL)//如果为空就返回
+	{
+		return;
+	}
+	else
+	{
+		SLTNode* nextNode = pos->next;//创建的节点下一位节点的地址指向pos后的节点的地址
+		pos->next = pos->next->next;////pos节点下一个节点的指向下一个节点的地址赋予进去
+		pos->next = nextNode->next;//节点的下一位地址重新赋予进去
+		free(nextNode);//释放
+	}
+}
+
+void SLTErase(SLTNode* pos,SLTNode** pphead) //删除pos的位置的节点
+{
+	assert(pos);
+	assert(pphead);
+
+	if (pos== *pphead)//如果删的位置是头部 那就直接带入头删
+	{
+		SLTDeleteHead(pphead);
+	}
+	else //否则
+	{
+		SLTNode* prev = *pphead; //否则创建一个临时一级指针 存放 二级指针pphead的解引用的内容：pphead的地址
+		while (prev->next != pos)//如果临时节点没到目标节点，就一直往下走
+		{
+			prev = prev->next;//将节点下一个节点的地址赋予进去，更新节点
+		}
+		prev->next = pos->next;//将目标节点的下一个节点的地址赋予目标前一个节点的下一个地址里面  简略来说就是跳过目标节点的地址
+		free(pos);//释放目标节点
+	}
+}
+
+void SLTDestory(SLTNode** pphead)//销毁链表
+{
+	SLTNode* cur = *pphead;//创建一个临时指针
+	while (cur)//不为空
+	{
+		SLTNode* next = cur->next; //创建一个新的指针，这个指针一直指向下一个节点的地址
+		free(cur);//释放完这个节点
+		cur = next;//就将下一个节点的地址重新赋予进去进行删除
+	}
+	*pphead = NULL;//置空
+}
+
+#include"SList.h"
+
+void Testlist1()
+{
+	SLTNode* n1 = BuySLTNode(1);
+	SLTNode* n2 = BuySLTNode(2);
+	SLTNode* n3 = BuySLTNode(3);
+	SLTNode* n4 = BuySLTNode(4);
+	SLTNode* n5 = BuySLTNode(5);
+	n1->next = n2;
+	n2->next = n3;
+	n3->next = n4;
+	n4->next = n5;
+	n5->next =	NULL;
+	SLTPrint(n1);
+}
+
+void Testlist2()
+{
+	SLTNode* plist = NULL;
+	SLTPushBack(&plist, 100);
+	SLTPushBack(&plist, 200);
+	SLTPushBack(&plist, 300);
+	SLTPrint(plist);
+
+	SLTDeleteHead(&plist);
+	SLTPrint(plist);
+
+	SLTDeleteHead(&plist);
+	SLTPrint(plist);
+
+	SLTDeleteHead(&plist);
+	SLTPrint(plist);
+
+	//SLTPopBack(&plist);
+	//SLTPrint(plist);
+}
+
+void Testlist3()
+{
+	SLTNode* list = NULL;
+	SLTPushBack(&list, 1);
+	SLTPushBack(&list, 2);
+	SLTPushBack(&list, 3);
+	SLTPushBack(&list, 4);
+	SLTPushBack(&list, 5); 
+	SLTPrint(list);
+	SLTDeleteTail(&list);
+	SLTDeleteTail(&list);
+	SLTDeleteTail(&list);
+	SLTPrint(list);
+}
+void Testlist4()
+{
+	SLTNode* plist = NULL;
+	SLTPushBack(&plist, 1);
+	SLTPushHead(&plist, 100);
+	SLTPushHead(&plist, 200);
+	SLTPushHead(&plist, 300);
+	SLTPushHead(&plist, 400);
+
+	SLTPrint(plist);
+
+	SLTDeleteHead(&plist);
+	SLTPrint(plist);
+	SLTDeleteHead(&plist);
+	SLTPrint(plist);
+	SLTDeleteHead(&plist);
+	SLTPrint(plist);
+	SLTDeleteHead(&plist);
+	SLTPrint(plist);
+}
+
+void Testlist5()
+{
+	SLTNode* list = NULL;
+	SLTPushBack(&list, 1);
+	SLTPushBack(&list, 2);
+	SLTPushBack(&list, 3);
+	SLTPushBack(&list, 4);
+	SLTPushBack(&list, 5);
+	SLTPushBack(&list, 6);
+	SLTPushBack(&list, 7);
+	SLTPrint(list);
+	SLTDeleteTail(&list);
+	SLTDeleteTail(&list);
+	SLTDeleteTail(&list);
+	SLTPrint(list);
+	SLTNode* p = SLTFind(list, 4);
+	SLTInsertAfter(p, 5);
+	p = SLTFind(list, 5);
+	SLTInsertAfter(p, 6);
+	SLTPrint(list);
+	p = SLTFind(list, 6);
+	SLTInsert(&list, p,7 );
+	SLTPrint(list);
+	p = SLTFind(list,1);
+	SLTInsert(&list, p,0);
+	SLTPrint(list);
+}
+
+void Testlist6()
+{
+	SLTNode* list = NULL;
+	SLTPushBack(&list, 1);
+	SLTPushBack(&list, 2);
+	SLTPushBack(&list, 3);
+	SLTPushBack(&list, 4);
+	SLTPushBack(&list, 5);
+	SLTPushBack(&list, 6);
+	SLTPushBack(&list, 7);
+	SLTPrint(list);
+	SLTNode* p = SLTFind(list, 2);
+	SLTEraseAfter(p);
+	SLTPrint(list);
+	p = SLTFind(list, 6);
+	SLTEraseAfter(p);
+	SLTPrint(list);
+	p = SLTFind(list, 2);
+	SLTErase(p,&list);
+	SLTPrint(list);
+	SLTDestory(&list);
+	SLTPrint(list);
+}
+
+int main()
+{
+	Testlist6();
+}
