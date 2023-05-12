@@ -1,0 +1,260 @@
+#include<stdio.h>
+#include<stdlib.h>
+#include<assert.h>
+#include<stdbool.h>
+
+typedef int LTDataType;
+
+typedef struct ListNode
+{
+	struct ListNode* prev;
+	struct ListNode* next;
+	LTDataType data;
+}LTNode;
+
+LTNode* BuyListNode(LTDataType x);//创建带头双向循环链表结点
+LTNode* LTInt();//带头双向循环链表的初始化
+
+void LTPrint(LTNode* phead);//打印
+
+void LTPushBack(LTNode* phead, LTDataType x);//尾插
+void LTPopBack(LTNode* phead);//尾删
+
+void LTPushFront(LTNode* phead, LTDataType x);//头插
+void LTPopFront(LTNode *phead);//头删
+
+LTNode* LTFind(LTNode* phead, LTDataType x);//查找
+
+void LTInsert(LTNode* pos, LTDataType x);//pos位置插入
+void LTErase(LTNode* pos);//pos位置删除
+
+bool LTEmpty(LTNode* head);//判断空
+size_t LTSize(LTNode* phead);//计录链表的长度
+void LTDestory(LTNode* head);//销毁链表
+
+#include"list.h"
+
+LTNode* BuyListNode(LTDataType x)//创建带头双向循环链表
+{
+	LTNode* node = ( LTNode*)malloc(sizeof(LTNode));//开辟空间
+	if (node == NULL)//为空返回
+	{
+		perror("malloc fail");
+		exit(-1);
+	}
+	//不为空
+	node->data = x;//值赋进去，前后指针置为空
+	node->prev = NULL;
+	node->next = NULL;
+	return node;
+}
+
+LTNode* LTInt()//链表的初始化
+{
+	LTNode* phead = BuyListNode(-1);//初始化头结点，且让前后指针都指向自己
+	phead->next = phead;
+	phead->prev = phead;
+	return phead;
+}
+
+void LTPrint(LTNode* phead)//打印
+{
+	assert(phead);
+	LTNode* cur = phead->next;//让临时指针指向cur的下一个结点
+	while (cur != phead)//让cur走一圈，走到哨兵位的头结点停止
+	{
+		printf("%d ", cur->data);
+		cur = cur->next;
+	}
+	printf("\n");
+}
+
+void LTPushBack(LTNode* phead, LTDataType x)//尾插
+{
+	assert(phead);
+	LTNode* newnode = BuyListNode(x);
+	LTNode* tail = phead->prev;//让tail指向哨兵结点的头指针 也就是链表的最后一个数据的地址
+	tail->next = newnode;//尾节点的尾指针指向新的节点
+	newnode->prev = tail;//新的节点的头指针指向原来的尾节点
+	phead->prev = newnode;//头节点的尾指针指向新的节点
+	newnode->next = phead;//新的节点的尾指针指向头
+}
+
+void LTPopBack(LTNode* phead)//尾删
+{
+	assert(phead);
+	assert(phead->next != phead);//空链表不能再进行删除
+
+	LTNode* tail = phead->prev;//尾结点为头节点的头指针
+	LTNode* tailprev = tail->prev;//头结点的前一个节点
+	tailprev->next = phead;//头结点的前一个节点的尾指针指向头
+	phead->prev = tailprev;//头节点的头指针指向头结点的前一个节点的尾
+	free(tail);//释放tail 即可删除目标节点
+}
+
+void LTPushFront(LTNode* phead, LTDataType x)//头插
+{
+	assert(phead);
+	LTNode* newnode = BuyListNode(x);//创建新的节点
+	newnode->next = phead->next;//如果原链表有结点，newnode的next就指向phead的插入的下一个节点，如果没有phead的next也是自身
+	phead->next->prev = newnode;//让phead的下一个结点的头指针指向新的节点
+	newnode->prev = phead;//新的节点的前指针指向哨兵头
+	phead->next = newnode;//哨兵头的尾指针指向新的节点
+}
+
+void LTPopFront(LTNode* phead)//头删
+{
+	assert(phead);
+	assert(phead->next != phead);//空链表不能再进行删除
+	LTNode* first, * second;//定义一下链表的第一个节点和第二个节点
+	first = phead->next;//第一个节点的地址赋予进去
+	second = first->next;//第二个节点的地址赋予进去
+	free(first);//把第一个节点释放
+	phead->next = second;//然后把第二个和头链接起来即可
+	second->prev = phead;
+}
+
+LTNode* LTFind(LTNode* phead, LTDataType x)
+{
+	assert(phead);
+	LTNode* cur = phead->next;//第一个节点
+	while (cur != phead)
+	{
+		if (cur->data == x)//找到了就返回地址，找不到就返回空
+		{
+			return cur;
+		}
+		cur = cur->next;//往下走一个
+	}
+	return NULL;
+}
+
+void LTInsert(LTNode* pos, LTDataType x)//在pos位置插入
+{
+	assert(pos);
+
+	LTNode* prev = pos->prev;//pos位置前一个节点
+	LTNode* newnode = BuyListNode(x);
+	//插入效果如下：prev  newnode pos
+	prev->next = newnode;//这四个步骤为这三个节点的中间链接关系
+	newnode->prev = prev;
+	pos->prev = newnode;
+	newnode->next = pos;
+}
+
+void LTErase(LTNode* pos)//在pos位置删除
+{
+	assert(pos);
+	LTNode* prev = pos->prev;//找到pos的前一个节点
+	LTNode* next = pos->next;//找到pos的后一个节点
+	free(pos);//删除pos
+	prev->next = next;//让前一个节点的尾指针指向后一个节点
+	next->prev = prev;//让后一个节点的头指针指向前一个节点
+}
+
+bool LTEmpty(LTNode* phead)//bool 类型是用来判断真假的 返回的值只有true  / false
+{
+	assert(phead);
+	return phead->next == phead;
+}
+
+size_t LTSize(LTNode* phead)//记录链表的长度
+{
+	assert(phead);
+	size_t size = 0;
+	LTNode* cur = phead->next;
+	while (cur != phead)
+	{
+		++size;
+		cur = cur->next;
+	}
+	return size;
+}
+
+void LTDestory(LTNode* phead)//销毁链表
+{
+	assert(phead);
+
+	LTNode* cur = phead->next;
+	while (cur != phead)
+	{
+		LTNode* next = cur->next;//保存下一个地址
+		free(cur);//释放
+		cur = next;//赋予
+	}
+	free(phead);
+}
+
+#include"list.h"
+#pragma once
+void test1()
+{
+	LTNode* phead = LTInt();
+	LTPushBack(phead, 1);
+	LTPushBack(phead, 2);
+	LTPushBack(phead, 3);
+	LTPushBack(phead, 4);
+	LTPushBack(phead, 5);
+	LTPushBack(phead, 6);
+	LTPrint(phead);
+	LTPopBack(phead);
+	LTPopBack(phead);
+	LTPopBack(phead);
+	LTPrint(phead);
+	LTPushFront(phead, 1);
+	LTPushFront(phead, 2);
+	LTPushFront(phead, 3);
+	LTPrint(phead);
+	LTPopFront(phead);
+	LTPopFront(phead);
+	LTPopFront(phead);
+	LTPrint(phead);
+}
+
+void test2()
+{
+	LTNode* phead = LTInt();
+	LTPushBack(phead, 1);
+	LTPushBack(phead, 2);
+	LTPushBack(phead, 3);
+	LTPushBack(phead, 4);
+	LTPushBack(phead, 5);
+	LTPushBack(phead, 6);
+	LTPrint(phead);
+	LTNode* pos = LTFind(phead, 1);
+	if (pos)
+		LTInsert(pos, 1);
+	LTPrint(phead);
+	pos = LTFind(phead, 1);
+	if (pos)
+		LTInsert(pos, 2);
+	LTPrint(phead);
+	pos = LTFind(phead, 2);
+	if (pos)
+		LTInsert(pos, 3);
+	LTPrint(phead);
+	pos = LTFind(phead, 6);
+	if (pos)
+	{
+		LTErase(pos);
+	}
+	LTPrint(phead);
+	pos = LTFind(phead, 5);
+	if (pos)
+	{
+		LTErase(pos);
+	}
+	LTPrint(phead);
+	pos = LTFind(phead, 4);
+	if (pos)
+	{
+		LTErase(pos);
+	}
+	LTPrint(phead);
+	printf("%d", LTSize(phead));
+}
+int main()
+{
+	test2();
+	return 0;
+}
