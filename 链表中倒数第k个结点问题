@@ -1,0 +1,30 @@
+/**
+ * struct ListNode {
+ *	int val;
+ *	struct ListNode *next;
+ * };
+ */
+/**
+ * 
+ * @param pListHead ListNode类 
+ * @param k int整型 
+ * @return ListNode类
+ */
+ //快慢指针问题
+struct ListNode* FindKthToTail(struct ListNode* pListHead, int k ) 
+{
+    struct ListNode*fast,*slow;//定义快 慢指针
+    fast = slow = pListHead;//指向头结点
+    while(k--)//将快指针往后移k个，然后让两个指针同时往后移，直到快到空为止
+    {
+        if(fast==NULL)//链表可能为空或者链表可能没k大
+            return NULL;
+        fast = fast->next;//往后挪一个
+    }
+    while(fast)//不为空 同时往后挪
+    {
+        fast=fast->next;
+        slow=slow->next;
+    }
+    return slow;//返回慢指针
+}
