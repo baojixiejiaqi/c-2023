@@ -1,0 +1,126 @@
+#include<stdio.h>
+#include<assert.h>
+#include<stdlib.h>
+#include<stdbool.h>
+#pragma once
+
+typedef int STDatatype;
+typedef struct Stack//栈
+{
+	STDatatype* a;//定义一个数组，用来存放元素
+	int capacity;//容量
+	int top;//数组下标,初始为0，表示栈顶位置下一个位置下标
+}ST;
+
+void StackInt(ST* ps);//初始化栈
+void StackDestory(ST* ps);//销毁栈
+bool StackEmpty(ST* ps);//判断栈是否为空
+int StackSize(ST* ps);//栈的大小
+STDatatype StackTop(ST* ps);//栈顶元素是什么
+
+void StackPush(ST* ps, STDatatype x);//入栈 
+void StackPop(ST* ps);//出栈
+
+#include"Stack.h"
+
+void StackInt(ST* ps)//初始化栈
+{
+	assert(ps);
+	ps->a = (STDatatype*)malloc(sizeof(STDatatype) * 4);//只需要给栈的数组存储开辟空间即可
+	if (ps->a == NULL)
+	{
+		perror("malloc fail");
+		exit(-1);
+	}
+	ps->capacity = 4;//初始容量为4
+	ps->top = 0;//角标为0，初始为0，表示栈顶位置下一个位置下标,即1为第一个位置下标
+}
+
+void StackDestory(ST* ps)//销毁栈
+{
+	assert(ps);
+
+	free(ps->a);
+	ps->a = NULL;
+	ps->capacity =ps->top = 0;
+}
+
+bool StackEmpty(ST* ps)//判断栈是否为空
+{
+	assert(ps);
+	return ps->top == 0;
+}
+
+void StackPush(ST* ps, STDatatype x)//入栈
+{
+	assert(ps);
+	if (ps->capacity == ps->top)//扩容
+	{
+		STDatatype* tmp = (STDatatype*)realloc(ps->a, sizeof(STDatatype) * 2 * (ps->capacity));//新的栈的内存为原来STDatatype的二倍
+		if (tmp == NULL)
+		{
+			perror("realloc fail");
+			exit(-1);
+		}
+		ps->a = tmp;//将原数组变成新的数组大小
+		ps->capacity *= 2;//内存为二倍
+	}
+	ps->a[ps->top] = x;//将top处的值赋进去
+	ps->top++;//下标++
+}
+
+void StackPop(ST* ps)//出栈
+{
+	assert(ps);
+	assert(!StackEmpty(ps));//占不能为空还出栈
+	
+	ps->top--;
+}
+
+STDatatype StackTop(ST* ps)//栈顶的元素
+{
+	assert(ps);
+	assert(!StackEmpty(ps));
+
+	return ps->a[ps->top - 1];//数组下标从0开始的
+}
+
+int StackSize(ST* ps)//栈的大小
+{	
+	assert(ps);
+	return ps->top;
+}
+
+#include"Stack.h"
+
+void Test1()
+{
+	ST st;
+	StackInt(&st);
+	StackPush(&st, 1);
+	StackPush(&st, 2);
+	StackPush(&st, 3);
+	StackPush(&st, 4);
+	StackPush(&st, 5);
+	printf("%d", StackTop(&st));
+}
+void Test2()
+{
+	ST st;
+	StackInt(&st);
+	StackPush(&st, 1);
+	StackPush(&st, 5);
+	StackPush(&st, 66);
+	StackPush(&st, 7);
+	StackPush(&st, 3);
+	StackPush(&st, 99);
+	printf("top: %d\n", StackTop(&st));
+	StackPop(&st);
+	StackPop(&st);
+	StackPop(&st);
+	printf("top: %d\n", StackTop(&st));
+}
+int main()
+{
+	Test2();
+}
