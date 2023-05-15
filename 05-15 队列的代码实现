@@ -90,7 +90,7 @@ void QueuePop(Queue* pq)//队列的出列
 
 	if (pq->head->next == NULL)//如果只有一个元素
 	{
-		free(pq);
+		free(pq->head);
 		pq->head = pq->tail = NULL;//就是释放这个结点
 	}
 	else
