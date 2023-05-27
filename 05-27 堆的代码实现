@@ -1,0 +1,316 @@
+#pragma once
+#include<stdio.h>
+#include<stdlib.h>
+#include<stdbool.h>
+#include<assert.h>
+#include<time.h>
+#pragma warning(disable : 4996)
+typedef int HPDataType;
+
+typedef struct Heap//创建堆
+{
+	HPDataType* a;
+	int size;
+	int capacity;
+}HP;
+
+int HeapSize(HP*php);//堆的大小
+void SwapHeap(HPDataType* p1, HPDataType* p2);//交换
+bool HeapEmpty(HP*php);//判断堆是否为空
+void AdjustDown(HPDataType*a,int n,int parent);//堆的向下调整 - 用于将大堆上面大的比下面小的互换，通常情况下用于删除
+void AdjustUp(HPDataType* a, int chlid);//堆的向上调整 - 用于往堆里面插入元素 判断插入的是否比上面的大的功能
+void SwapHeap(HPDataType* p1, HPDataType* p2);//交换功能
+
+//堆的构建
+void HeapCreate(HP* php, HPDataType* a, int n);//堆的创建 和下面初始化不一样
+void HeapPrint(HP* php);//打印
+void HeapInt(HP* php);//初始化
+void HeapDestory(HP* php);//销毁
+void HeapSort(int *a,int n);//排序
+
+
+void HeapPush(HP* php, HPDataType x);//插入堆
+void HeapPop(HP* php);//堆顶元素出堆
+HPDataType HeapTop(HP* php);//堆的最大最小元素
+
+#pragma once
+#include"Heap.h"
+
+void SwapHeap(HPDataType* p1, HPDataType* p2)//交换函数
+{
+	HPDataType tmp = *p1;
+	*p1 = *p2;
+	*p2 = tmp;
+}
+
+int	HeapsSize(HP* php)//堆的大小函数
+{
+	assert(php);
+	return php->size ;
+}
+
+bool HeapEmpty(HP* php)//堆的判空函数
+{
+	assert(php);
+	return php->size == 0;
+}
+void HeapInt(HP* php)//堆的初始化函数
+{
+	assert(php);
+	php->a = NULL;
+	php->size = php->capacity = 0;
+}
+
+void HeapDestory(HP* php)//堆的销毁函数
+{
+	assert(php);
+	free(php->a);//先释放堆里面的数组 然后置空 再将size 和 capacity 置为 0
+	php->a = NULL;
+	php->size = php->capacity = 0;
+}
+
+void HeapPrint(HP* php)//打印
+{
+	assert(php);
+	for (int i = 0; i < php->size; i++)
+	{
+		printf("%d ", php->a[i]);
+	}
+	printf("\n");
+}
+
+void HeapSort(int* a, int n)
+{
+	for (int i = (n - 1 - 1) / 2; i >= 0; i--)//将数组调整一下
+	{
+		AdjustDown(a, n, i);
+	}
+	int end = n - 1;
+	while (end)//将最大的数放到数组下标最大的，然后让角标往前挪一个即可，在挑出次大的放进角标前一个，依次类推
+	{
+		SwapHeap(&a[0], &a[end]);
+		AdjustDown(a, end, 0);
+		--end;
+	}
+}
+
+void HeapCreate(HP* php, HPDataType* a, int n)//堆的创建 与初始化不同 这个功能需要调用定义好的数组实现功能，而初始化功能至是简单的声明，不管你开没开的出来
+{
+	assert(php);
+	php->a = (HPDataType*)malloc(sizeof(HPDataType) * n);
+	if (php->a == NULL)
+	{
+		perror("malloc fail");
+		exit(-1);
+	}
+	memcpy(php->a, a, sizeof(HPDataType) * n);//将调用的数组的内容拷贝过去
+	php->size = php->capacity = n;
+	//建堆算法
+	for (int i = (n - 1 - 1) / 2; i >= 0; i--)//n-1为数组最后一个元素 再减一个 为了去找父节点 这个i在这里是所有父节点的角标
+	{
+		AdjustDown(php->a, n, i);//再将数组的所有元素用adjust函数调整一下 形成堆的数据结构
+	}
+}
+
+void HeapPush(HP* php, HPDataType x)//往栈里插入元素
+{
+	assert(php);
+	if (php->size == php->capacity)//判断扩容
+	{
+		//三元判断式 判断为 0 就空间为4 否则就*2
+		int newcapacity = php->capacity == 0 ? 4 : php->capacity * 2;
+		//tmp用来开辟空间来存储 数组a的内容
+		HPDataType* tmp = (HPDataType*)realloc(php->a, sizeof(HPDataType) * newcapacity);
+		if (tmp == NULL)//判断开辟成功否
+		{
+			perror("realloc fail");
+			exit(-1);
+		}
+		//成功了 就将tmp赋予a数组，加容量 变成新容量
+		php->a = tmp;
+		php->capacity = newcapacity;
+	}
+	//然后将数值放进去，size++往后一个
+	php->a[php->size] = x;
+	php->size++;
+	//调整插入元素与上面 父节点的大小
+	AdjustUp(php->a, php->size - 1);
+}
+
+void AdjustUp(HPDataType* a, int chlid) //调整插入时 孩子节点比父节点大的情况
+{
+	int parent = (chlid - 1) / 2; //父节点为 孩子节点的-1 / 2  --> chlid parent都为数组的下标 不是元素的大小
+	while (chlid > 0)//chlid角标>0
+	{
+		if (a[chlid] > a[parent])//如果孩子节点的值比父节点的大 就交换 然后将新的两个角标赋予进去
+		{
+			SwapHeap(&a[chlid],&a[parent]);
+			chlid = parent;
+			parent = (chlid - 1) / 2;
+		}
+		else
+		{
+			break;
+		}
+	}
+}
+
+void HeapPop(HP* php) //删除堆顶元素
+{
+	assert(php);
+	assert(php->size > 0);
+	  
+	SwapHeap(&php->a[0], &php->a[php->size - 1]); //思路：将堆顶的元素 和 堆的下标为size的元素互换一下 方便删除
+	php->size--;
+	AdjustDown(php->a, php->size, 0);//调整删除后堆顶的元素与下面 子节点的大小
+}
+
+void AdjustDown(HPDataType* a,  int n, int parent)//调整删除时 堆顶的元素比子节点的元素小的情况
+{
+	int chlid = parent * 2 + 1; //parent和 chlid 都为数组的角标 并非元素的数值
+	while (chlid <n)//n为数组的最后一个值
+	{
+		//左边条件是判断有没有右孩子节点存在 右边的是用来判断右孩子节点的值是否比默认是为左孩子节点的值大的情况
+		if (chlid + 1 < n && a[chlid + 1] > a[chlid])
+		{
+			++chlid; //如果大，就将孩子节点右移
+		}
+		if (a[chlid] > a[parent])//如果孩子节点大于父节点 那么就交换 ，赋予新的两个角标继续
+		{
+			SwapHeap(&a[chlid], &a[parent]);
+			parent = chlid;
+			chlid = parent * 2 + 1;
+		}
+		else
+		{
+			break;
+		}
+	}
+}
+
+HPDataType HeapTop(HP* php)//堆顶的元素
+{
+	assert(php);
+	assert(php->size > 0);
+	return php->a[0]; 
+}
+
+#pragma once
+#include"Heap.h"
+
+void TestHeap1()
+{
+	int array[] = {27, 15, 19, 18, 28, 34, 65, 49, 25, 37};
+	HP hp;
+	HeapInt(&hp);
+	for (int i = 0; i < sizeof(array)/sizeof(int); i++)
+	{
+		HeapPush(&hp, array[i]);
+	}
+	HeapPrint(&hp);
+	HeapPop(&hp);
+	HeapPop(&hp);
+	HeapPrint(&hp);
+	printf("%d ", HeapTop(&hp));
+}
+
+void TestHeap2()//打印堆的所有最大的元素
+{
+	int array[] = { 27, 15, 19, 18, 28, 34, 65, 49, 25, 37 };
+	HP hp;
+	HeapInt(&hp);
+	for (int i = 0; i < sizeof(array) / sizeof(int); i++)
+	{
+		HeapPush(&hp, array[i]);
+	}
+	while (!HeapEmpty(&hp))
+	{
+		printf("%d ", HeapTop(&hp));
+		HeapPop(&hp);
+	}
+	HeapDestory(&hp);
+}
+
+void TestHeap3()
+{
+	int array[] = { 27, 15, 19, 18, 28, 34, 65, 49, 25, 37 };
+	HP hp;
+	HeapCreate(&hp, array, sizeof(array) / sizeof(array[0]));
+	HeapPrint(&hp);
+	HeapDestory(&hp);
+}
+
+void TestHeap4()
+{
+	int array[] = { 27, 15, 19, 18, 28, 34, 65, 49, 25, 37 };
+	HeapSort(array, sizeof(array) / sizeof(array[0]));
+	for (int i = 0; i < sizeof(array) / sizeof(array[0]); i++)
+	{
+		printf("%d ", array[i]);
+	}
+	printf("\n");
+}
+
+void TestHeap5()
+{
+	//造数据
+	int n, k;//n多少个 k最大的几个
+	printf("请输入n和k:->");
+	scanf("%d%d", &n ,& k);
+	srand(time(0));//范围函数
+	FILE* file = fopen("data.txt", "w");
+	if (file == NULL)
+	{
+		perror("fopen fail");
+		return;
+	}
+	int randk = k;
+	for (size_t i = 0; i < n; i++)
+	{
+		int val = rand() % 10000;
+		fprintf(file, "%d\n", val);//随机赋值
+	}
+	fclose(file);
+	//找topk 最大的几个
+	FILE* data = fopen("data.txt", "r");
+	if (data == NULL)
+	{
+		perror("fopen fail");
+		return;
+	}
+	int* minHeap = malloc(sizeof(int) * k);//取出到数组里面
+	if (minHeap == NULL)
+	{
+		perror("malloc fail");
+		return;
+	}
+	for (int i = 0; i < k; i++)
+	{
+		fscanf(data, "%d", &minHeap[i]);
+	}
+	//建小堆
+	for (int i = (k - 1 - 1) / 2; i >= 0; i--)
+	{
+		AdjustDown(minHeap, k, i);
+	}
+	int val = 0;//如果比前五个数字大，那就替换放进去找最大的即可
+	while (fscanf(data, "%d", &val) != EOF)
+	{
+		if (val > minHeap[0])
+		{
+			minHeap[0] = val;
+			AdjustDown(minHeap, k, 0);
+		}
+
+	}
+	for (int i = 0; i < k; i++)
+	{
+		printf("%d ", minHeap[i]);
+	}
+	printf("\n");
+	fclose(data);
+}
+int main()
+{
+	TestHeap5();
+}
