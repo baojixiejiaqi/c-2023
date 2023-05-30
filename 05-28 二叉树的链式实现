@@ -4,7 +4,7 @@
 #include<assert.h>
 #include<stdbool.h>
 #include<stdlib.h>
-
+#pragma warning(disable : 4996)
 
 typedef int BTDataType;
 typedef struct BinaryTreeNode//二叉树 用的链式结构 方法：递归
@@ -14,24 +14,21 @@ typedef struct BinaryTreeNode//二叉树 用的链式结构 方法：递归
 	struct BinaryTreeNode* right;
 }BTNode;
 
-
 BTNode* BuyNode(BTDataType x);//二叉树的初始化
-
-
 
 
 void PrevOrder(BTNode* root);//前序排列
 void InOrder(BTNode* root);//中序排列
 void PostOrder(BTNode* root);//后续排列
 
-
 int TreeSize(BTNode* root);//二叉树节点个数
 int LeafSize(BTNode* root);//二叉树叶子节点个数
 int TreeHigh(BTNode* root);//二叉树的高度
 int LevelSize(BTNode* root,int k);//二叉树的第k层的节点个数
+BTNode* FindSize(BTNode* root, BTDataType x);//查找数字x 是否存在
+
 
 #include"BTNode.h"
-
 
 BTNode* BuyNode(BTDataType x)
 {
@@ -46,7 +43,6 @@ BTNode* BuyNode(BTDataType x)
 	return node;
 }
 
-
 void PrevOrder(BTNode* root)//前序排列  根 左 右
 {
 	if (root == NULL) //节点为空 就打印NULL 在返回上一层
@@ -58,7 +54,6 @@ void PrevOrder(BTNode* root)//前序排列  根 左 右
 	PrevOrder(root->left);//在迭代左节点
 	PrevOrder(root->right);//在迭代右节点
 }
-
 
 void InOrder(BTNode* root)//中序排列 左 根 右
 {
@@ -72,7 +67,6 @@ void InOrder(BTNode* root)//中序排列 左 根 右
 	InOrder(root->right);
 }
 
-
 void PostOrder(BTNode* root)//后序遍历 左 右 根
 {
 	if (root == NULL)
@@ -85,12 +79,10 @@ void PostOrder(BTNode* root)//后序遍历 左 右 根
 	printf("%d ", root->data);
 }
 
-
 int TreeSize(BTNode* root)//计算二叉树的节点个数
 {
 	if (root == NULL)
 		return 0;
-
 
 	/*static int size = 0;
 	size++;
@@ -107,7 +99,6 @@ int TreeSize(BTNode* root)//计算二叉树的节点个数
 	return root == NULL ? 0 : TreeSize(root->left) + TreeSize(root->right) + 1;
 }
 
-
 int LeafSize(BTNode* root)//计算二叉树的叶子节点
 {
 	if (root == NULL)
@@ -120,7 +111,6 @@ int LeafSize(BTNode* root)//计算二叉树的叶子节点
 	}
 	return LeafSize(root->left) + LeafSize(root->right);
 }
-
 
 int TreeHigh(BTNode* root)
 {
@@ -135,7 +125,6 @@ int TreeHigh(BTNode* root)
 	return lefthigh > righthigh ? lefthigh + 1 : righthigh + 1;
 }
 
-
 int LevelSize(BTNode* root, int k) //第k层节点的个数
 {
 	//分三类 为空 就为0 为1 就返回1个 剩下的就返回左右边K-1层之和
@@ -146,10 +135,28 @@ int LevelSize(BTNode* root, int k) //第k层节点的个数
 	return LevelSize(root->left, k - 1) + LevelSize(root->right, k - 1);
 }
 
+BTNode* FindSize(BTNode* root, BTDataType x)//查找数字
+{
+	if (root == NULL)
+	{
+		return NULL;
+	}
+	if (root->data == x)//查找到了就返回地址
+	{
+		return root;
+	}
+	BTNode* ret1 = FindSize(root->left, x);//向左遍历
+	if (ret1)
+		return ret1;
+	BTNode* ret2 = FindSize(root->right, x);//向右遍历
+	if (ret2)
+		return ret2;
+
+	return NULL;//都遍历完了 没找到就返回null
+}
+
 #include"BTNode.h"
 extern int size = 0;
-
-
 
 
 int main()
@@ -166,38 +173,43 @@ int main()
 	n4->left  = n5;
 	n4->right = n6;
 
-
 	printf("前序遍历为：");
 	PrevOrder(n1);
 	printf("\n");
-
 
 	printf("中序遍历为：");
 	InOrder(n1);
 	printf("\n");
 
-
 	printf("后序遍历为：");
 	PostOrder(n1);
 	printf("\n");
-
 
 	int size = TreeSize(n1);
 	printf("二叉树的节点个数为：%d ", size); 
 	printf("\n");
 
-
 	int leaf = LeafSize(n1);
 	printf("二叉树的叶子节点个数为：%d", leaf);
 	printf("\n");
-
 
 	int high = TreeHigh(n1);
 	printf("二叉树的高度：%d", high);
 	printf("\n");
 
-
 	int levelsize = LevelSize(n1, 2);
 	printf("二叉树第%d层的节点个数为：%d", TreeHigh(n1), 2);
-}
+	printf("\n");
 
+	int findsize = 0;
+	while (scanf("%d", &findsize) != EOF)
+	{
+		if (FindSize(n1, findsize))
+			printf("%d的地址为：%p \n", findsize, FindSize(n1, findsize));
+		else
+		{
+			printf("查找不到，不存在此数\n");
+		}
+	}
+	
+}
