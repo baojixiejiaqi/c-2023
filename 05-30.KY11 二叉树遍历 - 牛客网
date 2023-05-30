@@ -1,0 +1,44 @@
+//https://www.nowcoder.com/practice/4b91205483694f449f94c179883c1fef?tpId=60&&tqId=29483&rp=1&ru=/activity/oj&qru=/ta/tsing-kaoyan/question-ranking
+#include <stdio.h>
+//思路先创建好 二叉树
+//再进行中序遍历
+struct TreeNode
+{
+    char val;
+    struct TreeNode*left;
+    struct TreeNode*right;
+};
+struct TreeNode* rebulidTree(char *str,int *pi)//二叉树的创建
+{
+    if(str[*pi] == '#')//如果为#号就返回空，数组下标+1
+    {
+        (*pi)++;
+        return NULL;
+    }
+    //否则 就开辟新的节点
+    //将值赋予进去 再下标+1
+    struct TreeNode*root = (struct TreeNode*)malloc(sizeof(struct TreeNode));
+    root->val = str[(*pi)++];
+    root->left = rebulidTree(str,pi);
+    root->right = rebulidTree(str, pi);
+    return root;
+}
+void InOrder(struct TreeNode*root)//中序遍历
+{
+    if(root == NULL)
+    {
+        return;
+    }
+    InOrder(root->left);
+    printf("%c ",root->val);
+    InOrder(root->right);
+}
+int main() 
+{
+    char str[100];
+    scanf("%s",str);
+    int i = 0;
+    struct TreeNode *root = rebulidTree(str,&i);
+    InOrder(root);
+    return 0;
+}
