@@ -1,0 +1,212 @@
+#pragma once
+#include<stdio.h>
+#include<stdlib.h>
+#include<string.h>
+
+typedef int DataType;
+void PrintArray(int* a, int n);
+void InsertSort(int* a, int n);//直接插入排序
+void ShellSort(int* a, int n);//希尔排序
+void SelectSort(int* a, int n);//选择排序
+void BubbleSort(int* a, int n);//冒泡排序
+void QuickSort(int* a, int n);//快速排序
+
+#include"Sort.h"
+
+void PrintArray(int* a, DataType n)
+{
+	for (int i = 0; i < n; i++)
+	{
+		printf("%d ", a[i]);
+	}
+	printf("\n");
+}
+void InsertSort(int* a, int n)//直接插入排序
+{
+	for (int i = 0; i < n - 1; i++)//不能等于数组最后一个，不如最后一个和后面野指针比较出问题了
+	{
+		int end = i;//把最小的一个一个往前挪
+		int tmp = a[end + 1];//从排序哪个的后面开始进行交换
+		while (end >= 0)
+		{
+			if (tmp < a[end]) //如果tmp比前面的小，把tmp即是end后面的挪到前面
+			{
+				a[end + 1] = a[end];//先把大的挪后面
+				end--;
+			}
+			else
+			{
+				break;
+			}
+			a[end + 1] = tmp;//每往后面走一次，将小的赋予前面，第一次 end为-1 即是角标为0的地方
+		}
+		PrintArray(a, n);
+	}
+}
+
+void ShellSort(int* a, int n)//希尔排序
+{
+	// gap > 1 预排序 ->将排序的所有元素都通过间隔gap进行预排序
+	// gap == 1 直接插入排序
+	int gap = n;//间距
+	while (gap > 1) //大于1 预排序 等于一 直接插入排序
+	{
+		//gap 越大 大的数越可以更快到后面 小的可以更快到前面 越不接近有序
+		//gap越小 数据跳动的越慢 越接近有序
+		gap = gap/3 + 1; //保证最后gap能等于1 gap为一 就是两个数字相互交换 所以绝对可以保证是有序的
+		for (int i = 0; i < n - gap; ++i)//并排排序，排完一组的其中之一，下一个排另一组，以此类推
+		{
+			int end = i;
+			int tmp = a[end + gap];
+			while (end >= 0)
+			{
+				if (tmp < a[end])
+				{
+					a[end + gap] = a[end];//往后挪gap步
+					end -= gap;
+				}
+				else
+				{
+					break;
+				}
+			}
+			a[end + gap] = tmp;
+		}
+		PrintArray(a, n);
+	}
+}
+
+void Swap(int* a, int* b)
+{
+	int tmp = *a;
+	*a = *b;
+	*b = tmp;
+}
+void SelectSort(int* a, int n)//选择排序
+{
+	int begin = 0, end = n - 1;
+
+	while (begin < end)
+	{
+		int min = begin, max = begin;
+		for (int i = begin + 1; i <= end ; ++i)//找出一个最大的 和 最小的 
+		{
+			if (a[i] < a[min])
+			{
+				min = i;
+			}
+			if (a[i] > a[max])
+			{
+				max = i;
+			}
+			
+		}
+		//开始进行交换
+		Swap(&a[begin], &a[min]);
+		if (max == begin) //第一步交换完 可能发生重叠 把最大值放掉min的位置 导致交换失败
+		{
+			max = min;
+		}
+		Swap(&a[end], &a[max]);
+		++begin;
+		--end;
+	}
+}
+
+void BubbleSort(int* a, int n)//冒泡排序
+{
+	for (int j = 0; j < n; j++)
+	{
+		int flag = 0;
+		for (int i = 1; i < n - j; i++)
+		{
+			if (a[i - 1] > a[i])
+			{
+				Swap(&a[i], &a[i - 1]);
+				flag = 1;
+			}
+		}
+		//如果一趟下来 都比后面小 那么就为有序 所以跳出
+		if (flag == 0)
+		{
+			break;
+		}
+	}
+}
+
+void QuickSort(int* a, int begin,int end)
+{
+	if (begin >= end)
+	{
+		return;
+	}
+	int left = begin;
+	int right = end;
+	int key = left;
+	while (left < right)//判断条件为小于，如果等于或者大于就停止
+	{
+		//右边先走，找比key小的
+		while (left < right && a[right] >= a[key])//里面判断的是继续走的条件 不满足则停下来
+		{
+			right--;
+		}
+		//左边再走，找比key大的
+		while (left < right && a[left] <= a[key])
+		{
+			left++;
+		}
+		//里面循环停止了，就说明找到了
+		Swap(&a[left], &a[right]);
+	}
+	//交换key，将key变小
+	Swap(&a[left],&a[key]);
+	//重新赋予key
+	key = left;
+	//左右边继续遍历,继续排序，直到不能排为止
+	QuickSort(a, begin, key - 1);
+	QuickSort(a, key + 1, end);
+}
+
+
+#include"Sort.h"
+void TestInsertSort()
+{
+	int a[] = { 9, 1, 2, 5, 7, 4, 8, 6, 3 };
+	PrintArray(a, sizeof(a) / sizeof(int));
+	InsertSort(a, sizeof(a) / sizeof(int));
+}
+void TestShellSort()
+{
+	int a[] = { 9, 1, 2, 5, 7, 4, 8, 6, 3 };
+	PrintArray(a, sizeof(a) / sizeof(int));
+	ShellSort(a, sizeof(a) / sizeof(int));
+}
+void TestSelectSort()
+{
+	int a[] = { 9, 1, 2, 5, 7, 4, 8, 6, 3};
+	PrintArray(a, sizeof(a) / sizeof(int));
+	SelectSort(a, sizeof(a) / sizeof(int));
+	PrintArray(a, sizeof(a) / sizeof(int));
+}
+void TestBubbleSort()
+{
+	int a[] = { 9, 1, 2, 5, 7, 4, 8, 6, 3 };
+	PrintArray(a, sizeof(a) / sizeof(int));
+	BubbleSort(a, sizeof(a) / sizeof(int));
+	PrintArray(a, sizeof(a) / sizeof(int));
+}
+void TestQuickSort()
+{
+	int a[] = { 9, 1, 2, 5, 7, 4, 8, 6, 3 };
+	PrintArray(a, sizeof(a) / sizeof(int));
+	QuickSort(a, 0,sizeof(a) / sizeof(int)-1);
+	PrintArray(a, sizeof(a) / sizeof(int));
+}
+int main()
+{
+	
+	//TestShellSort();
+//	TestInsertSort();
+	TestQuickSort();
+	return 0;
+}
