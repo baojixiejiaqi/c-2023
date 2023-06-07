@@ -10,7 +10,8 @@ void ShellSort(int* a, int n);//希尔排序
 void SelectSort(int* a, int n);//选择排序
 void BubbleSort(int* a, int n);//冒泡排序
 void QuickSort(int* a, int n);//快速排序
-
+void MergeSort(int* a, int n);//归并排序
+void _MergeSort(int* a, int begin, int end, int *tmp);//归并排序的子问题
 #include"Sort.h"
 
 void PrintArray(int* a, DataType n)
@@ -165,6 +166,56 @@ void QuickSort(int* a, int begin,int end)
 	//左右边继续遍历,继续排序，直到不能排为止
 	QuickSort(a, begin, key - 1);
 	QuickSort(a, key + 1, end);
+}
+
+void MergeSort(int* a, int n)//归并排序
+{
+	int* tmp = (int*)malloc(sizeof(int) * n);
+	if (tmp == NULL)
+	{
+		perror("malloc fail");
+		exit(-1);
+	}
+	_MergeSort(a, 0, n - 1, tmp);
+
+	free(tmp);
+	tmp = NULL;
+}
+
+void _MergeSort(int* a, int begin, int end, int* tmp)//归并排序子问题
+{
+	if (begin >= end)
+	{
+		return;
+	}
+	int mid = (begin + end) / 2;
+	_MergeSort(a, begin, mid, tmp);
+	_MergeSort(a, mid + 1, end, tmp);
+	//归并好了
+	int begin1 = begin, end1 = mid;
+	int begin2 = mid + 1, end2 = end;
+	int i = begin;
+	while (begin1 <= end1 && begin2 <= end2)
+	{
+		if (a[begin1] <= a[begin2])
+		{
+			tmp[i++] = a[begin1++];
+		}
+		else
+		{
+			tmp[i++] = a[begin2++];
+		}
+	}
+
+	while (begin1 <= end1)
+	{
+		tmp[i++] = a[begin1++];
+	}
+	while (begin2 <= end2)
+	{
+		tmp[i++] = a[begin2++];
+	}
+	memcpy(a + begin, tmp + begin, sizeof(int) * (end - begin +1));
 }
 
 
