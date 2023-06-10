@@ -2,17 +2,120 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include<string.h>
-
+#include"Stack.h"
 
 typedef int DataType;
 void PrintArray(int* a, int n);
 void InsertSort(int* a, int n);//直接插入排序
 void ShellSort(int* a, int n);//希尔排序
 void SelectSort(int* a, int n);//选择排序
+void HeapSort(int* a, int n);//堆排序
 void BubbleSort(int* a, int n);//冒泡排序
-void QuickSort(int* a, int n);//快速排序
+void QuickSort(int* a, int begin, int end);//快速排序
+int PartSort1(int* a, int begin, int end);//Hoare
+int PartSort2(int* a, int begin, int end);//挖坑法
+int PartSort3(int* a, int begin, int end);//双指针排序
+void DoPartSort1(int* a, int begin, int end);//测试1,2,3
+void DoPartSort2(int* a, int begin, int end);
+void DoPartSort3(int* a, int begin, int end);
+void QuickSortNoRecursion(int* a, int begin, int end);//快速排序 非递归
 void MergeSort(int* a, int n);//归并排序
 void _MergeSort(int* a, int begin, int end, int *tmp);//归并排序的子问题
+void MergeSortNo(int* a, int n);//归并排序的非递归
+
+#include<stdio.h>
+#include<assert.h>
+#include<stdlib.h>
+#include<stdbool.h>
+#pragma once
+
+typedef int STDatatype;
+typedef struct Stack//栈
+{
+	STDatatype* a;//定义一个数组，用来存放元素
+	int capacity;//容量
+	int top;//数组下标,初始为0，表示栈顶位置下一个位置下标
+}ST;
+
+void StackInt(ST* ps);//初始化栈
+void StackDestory(ST* ps);//销毁栈
+bool StackEmpty(ST* ps);//判断栈是否为空
+int StackSize(ST* ps);//栈的大小
+STDatatype StackTop(ST* ps);//栈顶元素是什么
+
+void StackPush(ST* ps, STDatatype x);//入栈 
+void StackPop(ST* ps);//出栈
+
+#include"Stack.h"
+
+void StackInt(ST* ps)//初始化栈
+{
+	assert(ps);
+	ps->a = (STDatatype*)malloc(sizeof(STDatatype) * 4);//只需要给栈的数组存储开辟空间即可
+	if (ps->a == NULL)
+	{
+		perror("malloc fail");
+		exit(-1);
+	}
+	ps->capacity = 4;//初始容量为4
+	ps->top = 0;//角标为0，初始为0，表示栈顶位置下一个位置下标,即1为第一个位置下标
+}
+
+void StackDestory(ST* ps)//销毁栈
+{
+	assert(ps);
+
+	free(ps->a);
+	ps->a = NULL;
+	ps->capacity =ps->top = 0;
+}
+
+bool StackEmpty(ST* ps)//判断栈是否为空
+{
+	assert(ps);
+	return ps->top == 0;
+}
+
+void StackPush(ST* ps, STDatatype x)//入栈
+{
+	assert(ps);
+	if (ps->capacity == ps->top)//扩容
+	{
+		STDatatype* tmp = (STDatatype*)realloc(ps->a, sizeof(STDatatype) * 2 * (ps->capacity));//新的栈的内存为原来STDatatype的二倍
+		if (tmp == NULL)
+		{
+			perror("realloc fail");
+			exit(-1);
+		}
+		ps->a = tmp;//将原数组变成新的数组大小
+		ps->capacity *= 2;//内存为二倍
+	}
+	ps->a[ps->top] = x;//将top处的值赋进去
+	ps->top++;//下标++
+}
+
+void StackPop(ST* ps)//出栈
+{
+	assert(ps);
+	assert(!StackEmpty(ps));//占不能为空还出栈
+	
+	ps->top--;
+}
+
+STDatatype StackTop(ST* ps)//栈顶的元素
+{
+	assert(ps);
+	assert(!StackEmpty(ps));
+
+	return ps->a[ps->top - 1];//数组下标从0开始的
+}
+
+int StackSize(ST* ps)//栈的大小
+{	
+	assert(ps);
+	return ps->top;
+}
+
 #include"Sort.h"
 
 void PrintArray(int* a, DataType n)
@@ -42,7 +145,7 @@ void InsertSort(int* a, int n)//直接插入排序
 			}
 			a[end + 1] = tmp;//每往后面走一次，将小的赋予前面，第一次 end为-1 即是角标为0的地方
 		}
-		PrintArray(a, n);
+		//PrintArray(a, n);
 	}
 }
 
@@ -74,7 +177,7 @@ void ShellSort(int* a, int n)//希尔排序
 			}
 			a[end + gap] = tmp;
 		}
-		PrintArray(a, n);
+		//PrintArray(a, n);
 	}
 }
 
@@ -114,10 +217,48 @@ void SelectSort(int* a, int n)//选择排序
 		--end;
 	}
 }
+//向下调整
+void AdjustDown(int* a, int n, int parent)//调整删除时 堆顶的元素比子节点的元素小的情况
+{
+	int chlid = parent * 2 + 1; //parent和 chlid 都为数组的角标 并非元素的数值
+	while (chlid < n)//n为数组的最后一个值
+	{
+		//左边条件是判断有没有右孩子节点存在 右边的是用来判断右孩子节点的值是否比默认是为左孩子节点的值大的情况
+		if (chlid + 1 < n && a[chlid + 1] > a[chlid])
+		{
+			++chlid; //如果大，就将孩子节点右移
+		}
+		if (a[chlid] > a[parent])//如果孩子节点大于父节点 那么就交换 ，赋予新的两个角标继续
+		{
+			Swap(&a[chlid], &a[parent]);
+			parent = chlid;
+			chlid = parent * 2 + 1;
+		}
+		else
+		{
+			break;
+		}
+	}
+}
+
+void HeapSort(int* a, int n)//堆排序
+{
+	for (int i = (n - 1 - 1) / 2; i >= 0; i--)//将数组调整一下
+	{
+		AdjustDown(a, n, i);
+	}
+	int end = n - 1;
+	while (end)//将最大的数放到数组下标最大的，然后让角标往前挪一个即可，在挑出次大的放进角标前一个，依次类推
+	{
+		Swap(&a[0], &a[end]);
+		AdjustDown(a, end, 0);
+		--end;
+	}
+}
 
 void BubbleSort(int* a, int n)//冒泡排序
 {
-	for (int j = 0; j < n; j++)
+	for (int j = 0; j < n; j++)//多少趟
 	{
 		int flag = 0;
 		for (int i = 1; i < n - j; i++)
@@ -136,12 +277,146 @@ void BubbleSort(int* a, int n)//冒泡排序
 	}
 }
 
-void QuickSort(int* a, int begin,int end)
+void QuickSort(int* a, int begin,int end)//快速排序
 {
 	if (begin >= end)
 	{
 		return;
 	}
+	else
+	{
+		//三路划分法
+		//核心思想：跟key相等的，往后推
+		//比key小的甩到左边
+		//比key大的甩到右边
+		//跟key相等的就在中间
+		int mid = GetMid(a, begin, end);
+		Swap(&a[begin], &a[mid]);
+
+		int left = begin, right = end;
+		int key = a[left];
+		int cur = begin + 1;
+		while (cur <= right)
+		{
+			//把小的换到左边,cur和left同时往后走
+			if (a[cur] < key)
+			{
+				Swap(&a[left], &a[cur]);
+				left++;
+				cur++;
+			}
+			//相等就不敢 让cur往后走
+			else if (a[cur] == key)
+			{
+				cur++;
+			}
+			//把大的放到右边，right 往前走，换过来的可能又比key大或者比key小
+			else //a[cur] > key
+			{
+				Swap(&a[cur], &a[right]);
+				right--;
+			}
+		}
+
+		// [begin,left-1] 比key小,[left,right] 跟key相等的,[right+1,end] 比key大
+		QuickSort(a, begin, left - 1);
+		QuickSort(a, right + 1, end);
+	}
+	
+}
+int GetMid(int* a, int begin, int end)//查找中间的数字
+{
+	int mid = (begin + end) / 2;
+	if (a[begin] < a[mid])//分六种情况，每个都有三种可能
+	{
+		if (a[mid] < a[end])
+		{
+			return mid;
+		}
+		else if (a[begin] > a[end])
+		{
+			return begin;
+		}
+		else
+		{
+			return end;
+		}
+	}
+	else //a[begin > a[mid]
+	{
+		if (a[begin] < a[end])
+		{
+			return begin;
+		}
+		else if (a[mid] > a[end])
+		{
+			return mid;
+		}
+		else
+		{
+			return end;
+		}
+	}
+}
+void DoPartSort1(int* a, int begin, int end)
+{
+	if (begin >= end)
+	{
+		return;
+	}
+	else if ((end - begin + 1) < 15)
+	{
+		//小区间用直接插入替代，减少递归次数
+		InsertSort(a + begin, end - begin + 1);
+	}
+	else
+	{
+		int key = PartSort1(a, begin, end);
+		PartSort1(a, begin, key - 1);
+		PartSort1(a, key + 1, end);
+	}
+}
+
+void DoPartSort2(int* a, int begin, int end)
+{
+	if (begin >= end)
+	{
+		return;
+	}
+	else if ((end - begin + 1) < 15)
+	{
+		//小区间用直接插入替代，减少递归次数
+		InsertSort(a + begin, end - begin + 1);
+	}
+	else
+	{
+		int key = PartSort2(a, begin, end);
+		PartSort2(a, begin, key - 1);
+		PartSort2(a, key + 1, end);
+	}
+}
+
+void DoPartSort3(int* a, int begin, int end)
+{
+	if (begin >= end)
+	{
+		return;
+	}
+	else if ((end - begin + 1) < 15)
+	{
+		//小区间用直接插入替代，减少递归次数
+		InsertSort(a + begin, end - begin + 1);
+	}
+	else
+	{
+		int key = PartSort3(a, begin, end);
+		PartSort3(a, begin, key - 1);
+		PartSort3(a, key + 1, end);
+	}
+}
+
+int PartSort1(int* a, int begin, int end)//Hoare法
+{
 	int left = begin;
 	int right = end;
 	int key = left;
@@ -161,12 +436,92 @@ void QuickSort(int* a, int begin,int end)
 		Swap(&a[left], &a[right]);
 	}
 	//交换key，将key变小
-	Swap(&a[left],&a[key]);
+	Swap(&a[left], &a[key]);
 	//重新赋予key
 	key = left;
 	//左右边继续遍历,继续排序，直到不能排为止
-	QuickSort(a, begin, key - 1);
-	QuickSort(a, key + 1, end);
+	return key;
+}
+
+int PartSort2(int* a, int begin, int end)//挖坑法
+{
+	int mid = GetMid(a, begin, end);//找出中间值
+	Swap(&a[begin], &a[mid]);//交换一下 让判断的值既不是最大值也不是最小值
+	int left = begin,right = end;
+	int key = a[left];//判断值的大小
+	int hole = left;//让洞先等于左边
+	while (left < right)
+	{
+		//右边先走，填到左边坑里面	
+		while (left < right && a[right] >= key)//一直执行的条件
+		{
+			--right;
+		}
+		a[hole] = a[right];
+		hole = right;
+		//左边后走，填到右边坑里面
+		while (left < right && a[left] <= key)
+		{
+			++left;
+		}
+		a[hole] = a[left];
+		hole = left;
+
+	}
+	//停下来就说明相遇了 所以将中间的值记录下来 方便递归
+	a[hole] = key;
+	return hole;
+
+}
+int PartSort3(int* a, int begin, int end)//前后指针法
+{
+	int mid = GetMid(a, begin, end);
+	Swap(&a[begin], &a[mid]);
+
+	int keyi = begin;
+	int prev = begin, cur = begin + 1;//前在起始位置，后在下一个位置
+	while (cur <= end)
+	{
+		// 找到比key小的值时，跟++prev位置交换，小的往前翻，大的往后翻
+		if (a[cur] < a[keyi] && ++prev != cur)
+		{
+			Swap(&a[prev], &a[cur]);
+		}
+		++cur;
+	}
+
+	Swap(&a[prev], &a[keyi]);
+	keyi = prev;//记录key的位置
+	return keyi;
+}
+
+void QuickSortNoRecursion(int* a, int begin, int end)//非递归方法
+{
+	ST st;
+	StackInt(&st);
+	StackPush(&st, begin);//入栈
+	StackPush(&st, end);
+
+	while (!StackEmpty(&st))//如果栈里面还有元素就继续，没有的话就结束
+	{
+		int right = StackTop(&st);//记录栈顶
+		StackPop(&st);//出栈
+		int left = StackTop(&st);
+		StackPop(&st);
+
+		int key = PartSort3(a, left, right);
+		if (key + 1 < right)
+		{
+			StackPush(&st, key +1);
+			StackPush(&st, right);
+		}
+		if (left < key - 1)
+		{
+			StackPush(&st, left);
+			StackPush(&st, key - 1);
+		}
+	}
+	StackDestory(&st);
 }
 
 void MergeSort(int* a, int n)//归并排序
@@ -185,7 +540,7 @@ void MergeSort(int* a, int n)//归并排序
 
 void _MergeSort(int* a, int begin, int end, int* tmp)//归并排序子问题
 {
-	if (begin >= end)
+	if (end <= begin)
 	{
 		return;
 	}
@@ -219,46 +574,282 @@ void _MergeSort(int* a, int begin, int end, int* tmp)//归并排序子问题
 	memcpy(a + begin, tmp + begin, sizeof(int) * (end - begin +1));
 }
 
+void MergeSortNo(int* a, int n)//非递归排序
+{
+	int* tmp = (int*)malloc(sizeof(int) * n);
+	if (tmp == NULL)
+	{
+		perror("malloc fail");
+		exit(-1);
+	}
+	int rangeN = 1;
+	// 归并每组数据个数，从1开始，因为1个认为是有序的，可以直接归并
+	while (rangeN < n)
+	{
+		for (int i = 0; i < n; i += 2* rangeN)//每次+= 2
+		{
+			// [begin1,end1][begin2,end2] 归并
+			int begin1 = i;
+			int end1 = i + rangeN - 1;
+			int begin2 = i + rangeN;
+			int end2 = i + rangeN * 2 - 1;
+			int j = i;
+			//rangeN每次多二 会有右边越界问题 所以分类讨论
+			// [begin1 end1] 
+			// [begin2 end2] 越界
+			// 修正区间  ->拷贝数据 归并完了整体拷贝 or 归并每组拷贝
+			if (end1 >= n)
+			{
+				end1 = n - 1;
+				//不存在区间 就不进行++操作
+				begin2 = n;
+				end2 = n - 1;
+			}
+			else if (begin2 >= n)
+			{
+				//不存在区间
+				begin2 = n;
+				end2 = n - 1;
+			}
+			else if (end2 >= n)
+			{
+				//因为要将end1空间拷贝 所有需要end2有空间
+				end2 = n - 1;
+			}
+			while (begin1 <= end1 && begin2 <= end2)
+			{
+				if (a[begin1] <= a[begin2])
+				{
+					tmp[j++] = a[begin1++];
+				}
+				else
+				{
+					tmp[j++] = a[begin2++];
+				}
+			}
+			while (begin1 <= end1)
+			{
+				tmp[j++] = a[begin1++];
+			}
+			while (begin2 <= end2)
+			{
+				tmp[j++] = a[begin2++];
+			}
+		}
+		//整体拷贝回去
+		memcpy(a, tmp, sizeof(int)*n);
+		rangeN *= 2;
+	}
+	free(tmp);
+	tmp = NULL;
+}
 
 #include"Sort.h"
 void TestInsertSort()
 {
 	int a[] = { 9, 1, 2, 5, 7, 4, 8, 6, 3 };
+	printf("插入排序结果为：\n");
 	PrintArray(a, sizeof(a) / sizeof(int));
 	InsertSort(a, sizeof(a) / sizeof(int));
+	PrintArray(a, sizeof(a) / sizeof(int));
 }
+
 void TestShellSort()
 {
 	int a[] = { 9, 1, 2, 5, 7, 4, 8, 6, 3 };
+	printf("希尔排序结果为：\n");
 	PrintArray(a, sizeof(a) / sizeof(int));
 	ShellSort(a, sizeof(a) / sizeof(int));
+	PrintArray(a, sizeof(a) / sizeof(int));
 }
+
 void TestSelectSort()
 {
 	int a[] = { 9, 1, 2, 5, 7, 4, 8, 6, 3};
+	printf("选择排序结果为：\n");
 	PrintArray(a, sizeof(a) / sizeof(int));
 	SelectSort(a, sizeof(a) / sizeof(int));
 	PrintArray(a, sizeof(a) / sizeof(int));
 }
+
+void TestHeadSort()
+{
+	int a[] = { 9, 1, 2, 5, 7, 4, 8, 6, 3 };
+	printf("堆排序结果为：\n");
+	PrintArray(a, sizeof(a) / sizeof(int));
+	HeapSort(a, sizeof(a) / sizeof(int));
+	PrintArray(a, sizeof(a) / sizeof(int));
+}
+
 void TestBubbleSort()
 {
 	int a[] = { 9, 1, 2, 5, 7, 4, 8, 6, 3 };
+	printf("冒泡排序结果为：\n");
 	PrintArray(a, sizeof(a) / sizeof(int));
 	BubbleSort(a, sizeof(a) / sizeof(int));
 	PrintArray(a, sizeof(a) / sizeof(int));
 }
+
 void TestQuickSort()
 {
 	int a[] = { 9, 1, 2, 5, 7, 4, 8, 6, 3 };
+	printf("快速排序结果为：\n");
 	PrintArray(a, sizeof(a) / sizeof(int));
 	QuickSort(a, 0,sizeof(a) / sizeof(int)-1);
 	PrintArray(a, sizeof(a) / sizeof(int));
 }
+void TestPartSort1()
+{
+	int a[] = { 9, 1, 2, 5, 7, 4, 8, 6, 3 };
+	printf("Hoare法结果为：\n");
+	PrintArray(a, sizeof(a) / sizeof(int));
+	DoPartSort1(a, 0, sizeof(a) / sizeof(int) - 1);
+	PrintArray(a, sizeof(a) / sizeof(int));
+}
+
+void TestPartSort2()
+{
+	int a[] = { 9, 1, 2, 5, 7, 4, 8, 6, 3 };
+	printf("挖坑法结果为：\n");
+	PrintArray(a, sizeof(a) / sizeof(int));
+	DoPartSort2(a, 0, sizeof(a) / sizeof(int)-1);
+	PrintArray(a, sizeof(a) / sizeof(int));
+}
+
+void TestPartSort3()
+{
+	int a[] = { 9, 1, 2, 5, 7, 4, 8, 6, 3 };
+	printf("前后指针法结果为：\n");
+	PrintArray(a, sizeof(a) / sizeof(int));
+	QuickSortNoRecursion(a, 0, sizeof(a) / sizeof(int)-1);
+	PrintArray(a, sizeof(a) / sizeof(int));
+}
+
+void TestQuickSortNoRecursion()
+{
+	int a[] = { 9, 1, 2, 5, 7, 4, 8, 6, 3 };
+	printf("非递归法结果为：\n");
+	PrintArray(a, sizeof(a) / sizeof(int));
+	DoPartSort2(a, 0, sizeof(a) / sizeof(int) - 1);
+	PrintArray(a, sizeof(a) / sizeof(int));
+}
+
+void TestMergeSort()
+{
+	int a[] = { 9, 1, 2, 5, 7, 4, 8, 6, 13 };
+	printf("归并排序结果为：\n");
+	PrintArray(a, sizeof(a) / sizeof(int));
+	MergeSort(a, sizeof(a) / sizeof(int) - 1);
+	PrintArray(a, sizeof(a) / sizeof(int));
+}
+
+void TestMergeSortNo()
+{
+	int a[] = { 9, 1, 2, 5, 7, 4, 8, 6, 3 };
+	printf("归并非递归排序结果为：\n");
+	PrintArray(a, sizeof(a) / sizeof(int));
+	MergeSortNo(a, sizeof(a) / sizeof(int) - 1);
+	PrintArray(a, sizeof(a) / sizeof(int));
+}
+void TestOP()//测试时间进程的函数
+{
+	srand(time(0));
+	const int N = 1000;
+	int* a1 = (int*)malloc(sizeof(int) * N);
+	int* a2 = (int*)malloc(sizeof(int) * N);
+	int* a3 = (int*)malloc(sizeof(int) * N);
+	int* a4 = (int*)malloc(sizeof(int) * N);
+	int* a5 = (int*)malloc(sizeof(int) * N);
+	int* a6 = (int*)malloc(sizeof(int) * N);
+	int* a7 = (int*)malloc(sizeof(int) * N);
+
+	int j = 0;
+	for (int i = 0; i < N; ++i)
+	{
+		//a1[i] = rand();
+		a1[i] = i;
+		/*int x = rand();
+		if (x % 7 == 0 && x % 3 == 0 && x % 2 == 0)
+		{
+		a1[i] = x;
+		++j;
+		}
+		else
+		{
+		a1[i] = i;
+		}*/
+
+		a2[i] = a1[i];
+		a3[i] = a1[i];
+		a4[i] = a1[i];
+		a5[i] = a1[i];
+		a6[i] = a1[i];
+		a7[i] = a1[i];
+	}
+	//printf("%d\n", j);
+
+	int begin1 = clock();
+	InsertSort(a1, N);
+	int end1 = clock();
+
+	int begin2 = clock();
+	ShellSort(a2, N);
+	int end2 = clock();
+
+	int begin3 = clock();
+	SelectSort(a3, N);
+	int end3 = clock();
+
+	int begin4 = clock();
+	HeapSort(a4, N);
+	int end4 = clock();
+
+	int begin7 = clock();
+	BubbleSort(a7, N);
+	int end7 = clock();
+
+	int begin5 = clock();
+	QuickSort(a5, 0, N - 1);
+	//QuickSortNonR(a5, 0, N - 1);
+	int end5 = clock();
+
+	int begin6 = clock();
+	//MergeSort(a6, N);
+	int end6 = clock();
+
+	printf("InsertSort:%d\n", end1 - begin1);
+	printf("ShellSort:%d\n", end2 - begin2);
+	printf("SelectSort:%d\n", end3 - begin3);
+	printf("HeapSort:%d\n", end4 - begin4);
+	printf("BubbleSort:%d\n", end7 - begin7);
+
+	printf("QuickSort:%d\n", end5 - begin5);
+	printf("MergeSort:%d\n", end6 - begin6);
+
+	free(a1);
+	free(a2);
+	free(a3);
+	free(a4);
+	free(a5);
+	free(a6);
+}
+
 int main()
 {
 	
-	//TestShellSort();
-//	TestInsertSort();
+	TestInsertSort();
+	TestShellSort();
+	TestSelectSort();
+	TestHeadSort();
+	TestBubbleSort();
 	TestQuickSort();
+	TestPartSort1();
+	TestPartSort2();
+	TestPartSort3();
+	TestQuickSortNoRecursion();
+	TestMergeSort();
+	TestMergeSortNo();
+
+	//TestOP();
 	return 0;
 }
