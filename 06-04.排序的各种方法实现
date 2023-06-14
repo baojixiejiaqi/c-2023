@@ -22,6 +22,7 @@ void QuickSortNoRecursion(int* a, int begin, int end);//快速排序 非递归
 void MergeSort(int* a, int n);//归并排序
 void _MergeSort(int* a, int begin, int end, int *tmp);//归并排序的子问题
 void MergeSortNo(int* a, int n);//归并排序的非递归
+void CountSort(int*a, int n);//计数排序
 
 #include<stdio.h>
 #include<assert.h>
@@ -644,6 +645,45 @@ void MergeSortNo(int* a, int n)//非递归排序
 	tmp = NULL;
 }
 
+void CountSort(int* a, int n)//计数排序
+{
+	int max = a[0], min = a[0];//找出最大最小的
+	for (int i = 1; i < n; i++)
+	{
+		if (a[i] < min)
+		{
+			min = a[i];
+		}
+		if (a[i] > max)
+		{
+			max = a[i];
+		}
+	}
+	//开辟新空间进行计数
+	int range = max - min + 1;//这个数组区间范围
+	int* countA = (int*)calloc(range, sizeof(int));
+	if (countA == NULL)
+	{
+		perror("malloc fail");
+		exit(-1);
+	}
+	//统计次数
+	for (int i = 0; i < n; ++i)
+	{
+		countA[a[i]-min]++;
+	}
+	//排序
+	int k = 0;
+	for (int j = 0; j < range; ++j)
+	{
+		while (countA[j]--)//计数几个 往原数组写几个
+		{
+			a[k++] = j + min;//计数几个就说明 j出现几个 原数组就是 J+ MIN 出现几个
+		}
+	}
+	free(countA);
+}
+
 #include"Sort.h"
 void TestInsertSort()
 {
@@ -751,6 +791,16 @@ void TestMergeSortNo()
 	MergeSortNo(a, sizeof(a) / sizeof(int) - 1);
 	PrintArray(a, sizeof(a) / sizeof(int));
 }
+
+void TestCountSort()
+{
+	int a[] = { 9, 1, 2, 5, 7, 4, 8, 3, 6 };
+	printf("计数排序结果为：\n");
+	PrintArray(a, sizeof(a) / sizeof(int));
+	CountSort(a, sizeof(a) / sizeof(int) - 1);
+	PrintArray(a, sizeof(a) / sizeof(int));
+}
+
 void TestOP()//测试时间进程的函数
 {
 	srand(time(0));
@@ -849,7 +899,8 @@ int main()
 	TestQuickSortNoRecursion();
 	TestMergeSort();
 	TestMergeSortNo();
-
+	TestCountSort();
+	
 	//TestOP();
 	return 0;
 }
