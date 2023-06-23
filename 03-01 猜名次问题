@@ -1,4 +1,3 @@
-
 #include<stdio.h>
 void swapArgs(int* a, int* b) //交换函数
 {
